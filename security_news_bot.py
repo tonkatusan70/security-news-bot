@@ -123,11 +123,17 @@ def post_to_x(force_post=False):
             # ✅ 投稿試行（最大3回）
             for attempt in range(3):
                 try:
-                    response = client.create_tweet(text=tweet_content)
+                  try:
+    api.update_status(tweet_content)
+    print(f"✅ 投稿成功: {tweet_content}")
+except tweepy.TweepyException as e:
+    print(f"❌ X への投稿に失敗しました: {e}")
+
                     print(f"✅ 投稿成功: {tweet_content}\n🔹 Tweet ID: {response.data['id']}")
                     break  # 成功したらループを抜ける
-                except tweepy.TweepError as e:
-                    print(f"❌ X への投稿に失敗しました（試行 {attempt+1}/3 回目）: {e}")
+                    except tweepy.TweepyException as e:
+                    print(f"❌ X への投稿に失敗しました: {e}")
+
                     if attempt < 2:  # 最後の試行でなければ待機
                         print("🔄 5秒待機して再試行...")
                         time.sleep(5)
