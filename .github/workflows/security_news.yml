@@ -2,7 +2,7 @@ name: Security News Bot
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # JSTで7時,12時,20時に実行（UTC基準）
+    - cron: '*/5 * * * *'  # ✅ 5分ごとに実行（UTC基準）
   workflow_dispatch:  # ✅ 手動実行を可能にする
 
 jobs:
@@ -17,10 +17,17 @@ jobs:
           python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install requests google-generativeai tweepy
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests google-generativeai tweepy
 
-      - name: Run script (with test mode)
-        run: python security_news_bot.py --test  # ✅ `--test` を追加
+      - name: Run script (scheduled or test mode)
+        run: |
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            python security_news_bot.py
+          else
+            python security_news_bot.py --test
+          fi
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GOOGLE_SEARCH_API_KEY: ${{ secrets.GOOGLE_SEARCH_API_KEY }}
