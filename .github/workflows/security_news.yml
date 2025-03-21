@@ -2,8 +2,13 @@ name: Security News Bot
 
 on:
   schedule:
-    - cron: '*/10 * * * *'  # JSTで7時,12時,20時に実行（UTC基準）
+    - cron: '0 22,3,11 * * *'  # JST 7時, 12時, 20時 に実行（UTC基準 22時, 3時, 11時）
   workflow_dispatch:  # ✅ 手動実行ボタンを追加
+    inputs:
+      test_mode:
+        description: 'Run in test mode (yes/no)'
+        required: false
+        default: 'no'
 
 jobs:
   post_news:
@@ -19,8 +24,13 @@ jobs:
       - name: Install dependencies
         run: pip install requests google-generativeai tweepy
 
-      - name: Run script (test mode if triggered manually)
-        run: python security_news_bot.py ${{ github.event.inputs.mode }}
+      - name: Run script
+        run: |
+          if [[ "${{ github.event.inputs.test_mode }}" == "yes" ]]; then
+            python security_news_bot.py --test
+          else
+            python security_news_bot.py
+          fi
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GOOGLE_SEARCH_API_KEY: ${{ secrets.GOOGLE_SEARCH_API_KEY }}
@@ -29,4 +39,3 @@ jobs:
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
           X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
           X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
-
