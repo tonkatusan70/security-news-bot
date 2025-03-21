@@ -14,14 +14,18 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'  # 修正: Pythonのバージョンを3.10に設定
+          python-version: '3.10'
 
       - name: Install dependencies
-        run: pip install requests google-generativeai tweepy
+        run: |
+          pip install --upgrade pip
+          pip install google-generativeai google-api-python-client tweepy requests
 
       - name: Run script
         run: python security_news_bot.py
         env:
+          GOOGLE_SEARCH_API_KEY: ${{ secrets.GOOGLE_SEARCH_API_KEY }}
+          GOOGLE_SEARCH_CX: ${{ secrets.GOOGLE_SEARCH_CX }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           X_API_KEY: ${{ secrets.X_API_KEY }}
           X_API_SECRET: ${{ secrets.X_API_SECRET }}
