@@ -2,8 +2,8 @@ import os
 import requests
 
 # 環境変数から API キーと検索エンジン ID を取得
-API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")
-CX = os.getenv("GOOGLE_SEARCH_CX")
+API_KEY = os.getenv("GOOGLE_API_KEY")  # 変更
+CX = os.getenv("SEARCH_ENGINE_ID")  # 変更
 
 # Google Search API のエンドポイント
 SEARCH_URL = "https://www.googleapis.com/customsearch/v1"
