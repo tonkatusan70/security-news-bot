@@ -10,12 +10,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-- name: Set up Python
-  uses: actions/setup-python@v4
-  with:
-    python-version: '3.10'
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'  # 修正: Pythonのバージョンを3.10に設定
+
       - name: Install dependencies
         run: pip install requests google-generativeai tweepy
+
       - name: Run script
         run: python security_news_bot.py
         env:
