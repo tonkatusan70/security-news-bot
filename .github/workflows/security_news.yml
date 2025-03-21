@@ -2,7 +2,7 @@ name: Security News Bot
 
 on:
   schedule:
-    - cron: '0 22,3,11 * * *'  # JSTで7時,12時,20時に実行（UTC基準）
+    - cron: '30 17,22,3,11 * * *'  # JSTで7時,12時,20時に実行（UTC基準）
   workflow_dispatch:  # ✅ 手動実行を可能にする
 
 jobs:
