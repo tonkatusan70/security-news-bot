@@ -1,10 +1,12 @@
-name: Test Security News Bot
+name: Security News Bot
 
 on:
-  workflow_dispatch:  # ✅ 手動実行のみ
+  schedule:
+    - cron: '0 7,12,20 * * *'  # JSTで7時,12時,20時に実行（UTC基準）
+  workflow_dispatch:  # ✅ 手動実行を可能にする
 
 jobs:
-  test_post:
+  post_news:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -17,7 +19,7 @@ jobs:
       - name: Install dependencies
         run: pip install requests google-generativeai tweepy
 
-      - name: Run test script
+      - name: Run script (with test mode)
         run: python security_news_bot.py --test  # ✅ `--test` を追加
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
