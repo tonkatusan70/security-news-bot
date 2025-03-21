@@ -25,7 +25,6 @@ auth = tweepy.OAuthHandler(X_API_KEY, X_API_SECRET)
 auth.set_access_token(X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET)
 api = tweepy.API(auth)
 
-
 def search_google():
     """Google Search API を使って最新のニュースを1件取得する"""
     if not GOOGLE_SEARCH_API_KEY or not GOOGLE_SEARCH_CX:
@@ -51,7 +50,6 @@ def search_google():
         print(f"❌ HTTPリクエストエラー: {e}")
         return None
 
-
 def summarize_news(news_text):
     """Gemini API を使ってニュース記事を要約する"""
     try:
@@ -60,7 +58,6 @@ def summarize_news(news_text):
     except Exception as e:
         print(f"❌ 要約中にエラーが発生しました: {e}")
         return None
-
 
 def post_to_x():
     """最新のニュースを取得し、要約して X に投稿する"""
@@ -84,11 +81,12 @@ def post_to_x():
         try:
             api.update_status(tweet_content)
             print(f"✅ 投稿成功: {tweet_content}")
-        except tweepy.TweepError as e:
+        except tweepy.errors.Forbidden as e:
             print(f"❌ X への投稿に失敗しました: {e.response.status_code} - {e.response.reason}")
+        except Exception as e:
+            print(f"❌ X への投稿時に予期せぬエラーが発生: {e}")
     else:
         print("⚠️ 要約に失敗したため投稿をスキップ")
-
 
 if __name__ == "__main__":
     post_to_x()
