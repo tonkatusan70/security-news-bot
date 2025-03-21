@@ -17,11 +17,12 @@ genai.configure(api_key=GEMINI_API_KEY)
 def summarize_news(news_text):
     """ニュース記事の要約を生成"""
     try:
-        model = genai.GenerativeModel('gemini-pro')  # 最新バージョンならこれでOK
+        model = genai.GenerativeModel('gemini-pro')
         response = model.generate_content(f"以下のニュースを簡潔に要約してください:\n\n{news_text}")
         return response.text.strip()
     except Exception as e:
-        return f"要約中にエラーが発生しました: {e}"
+        print("要約中にエラーが発生しました:", e)
+        return None
 
 # --- Google News RSS からニュースを取得 ---
 def get_security_news():
@@ -31,7 +32,8 @@ def get_security_news():
     try:
         response = requests.get(rss_url, timeout=10)
         if response.status_code != 200:
-            return "ニュースを取得できませんでした。"
+            print("ニュースを取得できませんでした。")
+            return None
 
         root = ET.fromstring(response.content)
         items = root.findall(".//item")
@@ -44,17 +46,21 @@ def get_security_news():
 
         return "\n\n".join(news_list)
     except Exception as e:
-        return f"ニュース取得中にエラーが発生しました: {e}"
+        print("ニュース取得中にエラーが発生しました:", e)
+        return None
 
 # --- X に投稿 ---
 def post_to_x():
     """ニュースを要約してXに投稿"""
     news_text = get_security_news()
-    if "エラー" in news_text:
+    if not news_text:
         print("ニュース取得に失敗しました。投稿をスキップします。")
         return
     
     summary = summarize_news(news_text)
+    if not summary:
+        print("要約に失敗しました。投稿をスキップします。")
+        return
     
     tweet = f"【最新のセキュリティニュース】\n{summary}"
     if len(tweet) > 280:
@@ -64,10 +70,14 @@ def post_to_x():
         auth = tweepy.OAuthHandler(X_API_KEY, X_API_SECRET)
         auth.set_access_token(X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET)
         api = tweepy.API(auth)
+
+        # 投稿テスト (デバッグ用)
+        print("投稿内容:", tweet)
+        
         api.update_status(tweet)
-        print("投稿完了:", tweet)
+        print("✅ Xへの投稿完了！")
     except Exception as e:
-        print("Xへの投稿中にエラーが発生しました:", e)
+        print("❌ Xへの投稿中にエラーが発生しました:", e)
 
 # --- メイン処理 ---
 if __name__ == "__main__":
