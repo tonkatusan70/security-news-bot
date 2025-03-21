@@ -115,7 +115,7 @@ def post_to_x(force_post=False):
 
         if summary:
             # ✅ 投稿用のフォーマット
-            tweet_content = f"{title_jp}\n\n{summary}\n参考URL: {link}"
+            tweet_content = f"【{title_jp}】\n\n{summary}\n{link}"
             
             # ✅ 文字数制限を考慮（X は最大 280 文字）
             if len(tweet_content) > 280:
