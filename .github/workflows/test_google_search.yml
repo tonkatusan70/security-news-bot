@@ -1,23 +1,25 @@
 name: Test Google Search API
 
 on:
-  workflow_dispatch:
+  workflow_dispatch:  # 手動実行用
 
 jobs:
-  test_search:
+  test_google_search:
     runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
 
-      - name: Set up Python
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v3
+
+      - name: Python をセットアップ
         uses: actions/setup-python@v4
         with:
           python-version: "3.10"
 
-      - name: Install dependencies
-        run: pip install requests google-generativeai
+      - name: 依存関係をインストール
+        run: pip install requests
 
-      - name: Run test script
+      - name: Google Search API のテストを実行
         run: python test_google_search.py
         env:
           GOOGLE_SEARCH_API_KEY: ${{ secrets.GOOGLE_SEARCH_API_KEY }}
