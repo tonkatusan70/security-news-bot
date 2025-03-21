@@ -2,6 +2,7 @@ import requests
 import google.generativeai as genai
 import tweepy
 import os
+import xml.etree.ElementTree as ET
 
 # --- 環境変数からAPIキーを取得 ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
@@ -13,6 +14,12 @@ X_ACCESS_TOKEN_SECRET = os.getenv("X_ACCESS_TOKEN_SECRET")
 # --- Google Gemini API セットアップ ---
 genai.configure(api_key=GEMINI_API_KEY)
 
+def summarize_news(news_text):
+    """ニュース記事の要約を生成"""
+    model = genai.GenerativeModel(model_name='gemini-pro', api_version='v1')  # 修正: v1 を明示
+    response = model.generate_content(f"以下のニュースを簡潔に要約してください:\n\n{news_text}")
+    return response.text.strip()
+
 # --- X API 認証 ---
 auth = tweepy.OAuthHandler(X_API_KEY, X_API_SECRET)
 auth.set_access_token(X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET)
@@ -22,12 +29,11 @@ api = tweepy.API(auth)
 def get_security_news():
     """Google News RSSを使って最新のサイバーセキュリティニュースを取得"""
     rss_url = "https://news.google.com/rss/search?q=サイバーセキュリティ&hl=ja&gl=JP&ceid=JP:ja"
-    response = requests.get(rss_url)
+    response = requests.get(rss_url, timeout=10)
     
     if response.status_code != 200:
         return "ニュースを取得できませんでした。"
 
-    from xml.etree import ElementTree as ET
     root = ET.fromstring(response.content)
     items = root.findall(".//item")
 
@@ -38,13 +44,6 @@ def get_security_news():
         news_list.append(f"{title}\n{link}")
 
     return "\n\n".join(news_list)
-
-# --- Google Gemini APIで要約 ---
-def summarize_news(news_text):
-    """ニュース記事の要約を生成"""
-    model = genai.GenerativeModel('gemini-pro')
-    response = model.generate_content(f"以下のニュースを簡潔に要約してください:\n\n{news_text}")
-    return response.text.strip()
 
 # --- X に投稿 ---
 def post_to_x():
