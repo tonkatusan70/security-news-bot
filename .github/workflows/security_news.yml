@@ -2,7 +2,7 @@ name: Security News Bot
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # ✅ 5分ごとに実行（UTC基準）
+    - cron: '*/10 * * * *'  # ✅ 5分ごとに実行（UTC基準）
   workflow_dispatch:  # ✅ 手動実行を可能にする
 
 jobs:
