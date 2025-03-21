@@ -7,10 +7,11 @@ import tweepy
 GOOGLE_SEARCH_API_KEY = os.getenv("GOOGLE_SEARCH_API_KEY")  # Google Search API Key
 GOOGLE_SEARCH_CX = os.getenv("GOOGLE_SEARCH_CX")  # Custom Search Engine ID
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")  # Gemini API Key
-X_API_KEY = os.getenv("X_API_KEY")  # Twitter API Key
-X_API_SECRET = os.getenv("X_API_SECRET")  # Twitter API Secret
-X_ACCESS_TOKEN = os.getenv("X_ACCESS_TOKEN")  # Twitter Access Token
-X_ACCESS_TOKEN_SECRET = os.getenv("X_ACCESS_TOKEN_SECRET")  # Twitter Access Token Secret
+X_API_KEY = os.getenv("X_API_KEY")  # X API Key
+X_API_SECRET = os.getenv("X_API_SECRET")  # X API Secret
+X_ACCESS_TOKEN = os.getenv("X_ACCESS_TOKEN")  # X Access Token
+X_ACCESS_TOKEN_SECRET = os.getenv("X_ACCESS_TOKEN_SECRET")  # X Access Token Secret
+X_BEARER_TOKEN = os.getenv("X_BEARER_TOKEN")  # X Bearer Token
 
 # ✅ Google Search API のエンドポイント
 SEARCH_URL = "https://www.googleapis.com/customsearch/v1"
@@ -20,10 +21,13 @@ QUERY = "latest cybersecurity news"
 genai.configure(api_key=GEMINI_API_KEY)
 model = genai.GenerativeModel("gemini-1.5-pro-latest")
 
-# ✅ Twitter API の認証
-auth = tweepy.OAuthHandler(X_API_KEY, X_API_SECRET)
-auth.set_access_token(X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET)
-api = tweepy.API(auth)
+# ✅ X API の認証（tweepy.Client を使用）
+client = tweepy.Client(
+    consumer_key=X_API_KEY,
+    consumer_secret=X_API_SECRET,
+    access_token=X_ACCESS_TOKEN,
+    access_token_secret=X_ACCESS_TOKEN_SECRET
+)
 
 
 def search_google():
@@ -45,7 +49,12 @@ def search_google():
         response = requests.get(SEARCH_URL, params=params)
         response.raise_for_status()
         data = response.json()
-        return data.get("items", [])
+
+        if "items" not in data:
+            print("⚠️ 検索結果が見つかりませんでした。")
+            return []
+
+        return data["items"]
 
     except requests.exceptions.RequestException as e:
         print(f"❌ HTTPリクエストエラー: {e}")
@@ -56,7 +65,8 @@ def summarize_news(news_text):
     """Gemini API を使ってニュース記事を要約する"""
     try:
         response = model.generate_content(f"以下のニュースを100文字以内で要約してください:\n\n{news_text}")
-        return response.text.strip()
+        summary = response.candidates[0].content.parts[0].text.strip()
+        return summary
     except Exception as e:
         print(f"❌ 要約中にエラーが発生しました: {e}")
         return None
@@ -83,8 +93,8 @@ def post_to_x():
                 tweet_content = f"📰 {title}\n🔗 {link}"  # 長すぎる場合はタイトルとURLのみ
 
             try:
-                api.update_status(tweet_content)
-                print(f"✅ 投稿成功: {tweet_content}")
+                response = client.create_tweet(text=tweet_content)
+                print(f"✅ 投稿成功: {tweet_content}\n🔹 Tweet ID: {response.data['id']}")
             except Exception as e:
                 print(f"❌ X への投稿に失敗しました: {e}")
         else:
