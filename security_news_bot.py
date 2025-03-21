@@ -21,9 +21,7 @@ QUERY = "latest cybersecurity news"
 
 # ✅ Google Gemini API の設定
 genai.configure(api_key=GEMINI_API_KEY)
-# ✅ より制限が緩いモデルを選択
-model = genai.GenerativeModel("gemini-1.5-flash")
-
+model = genai.GenerativeModel("gemini-1.5-pro-latest")
 
 # ✅ X API の認証
 client = tweepy.Client(
@@ -32,6 +30,10 @@ client = tweepy.Client(
     access_token=X_ACCESS_TOKEN,
     access_token_secret=X_ACCESS_TOKEN_SECRET
 )
+
+# ✅ 投稿する時間（JST基準）
+POST_TIMES = ["07:00", "12:00", "20:00"]
+
 
 def search_google():
     """Google Search API を使って最新のニュースを取得する"""
@@ -73,28 +75,29 @@ def translate_to_japanese(text):
         print(f"❌ 翻訳中にエラーが発生しました: {e}")
         return text  # 失敗した場合はそのまま英語を返す
 
+
 def summarize_news(news_text):
     """Gemini API を使ってニュース記事を要約する"""
-    cached_summaries = {}  # キャッシュを導入
-    if news_text in cached_summaries:
-        return cached_summaries[news_text]
+    try:
+        response = model.generate_content(f"以下のニュースを100文字以内で簡潔に要約してください:\n\n{news_text}")
+        return response.candidates[0].content.parts[0].text.strip()
+    except Exception as e:
+        print(f"❌ 要約中にエラーが発生しました: {e}")
+        return None
 
-    for attempt in range(3):  # 最大3回リトライ
-        try:
-            response = model.generate_content(f"以下のニュースを100文字以内で要約してください:\n\n{news_text}")
-            summary = response.text.strip()
-            cached_summaries[news_text] = summary  # キャッシュに保存
-            return summary
-        except Exception as e:
-            print(f"❌ 要約中にエラーが発生しました（試行 {attempt+1}/3）: {e}")
-            if "429" in str(e):  # クォータ制限エラーなら待機
-                time.sleep(60)  # 60秒待機してリトライ
-            else:
-                break
-    return None  # 失敗したら None を返す
+
+def should_post_now():
+    """現在時刻が指定された投稿時間に一致するかを確認"""
+    now = datetime.now().strftime("%H:%M")
+    return now in POST_TIMES
+
 
 def post_to_x(force_post=False):
     """最新のニュースを取得し、要約して X に投稿する"""
+    if not force_post and not should_post_now():
+        print("⏳ 現在は投稿時間ではありません。")
+        return
+
     news_items = search_google()
     if not news_items:
         print("⚠️ 最新のニュースが見つかりませんでした。")
@@ -123,17 +126,11 @@ def post_to_x(force_post=False):
             # ✅ 投稿試行（最大3回）
             for attempt in range(3):
                 try:
-                  try:
-    api.update_status(tweet_content)
-    print(f"✅ 投稿成功: {tweet_content}")
-except tweepy.TweepyException as e:
-    print(f"❌ X への投稿に失敗しました: {e}")
-
+                    response = client.create_tweet(text=tweet_content)
                     print(f"✅ 投稿成功: {tweet_content}\n🔹 Tweet ID: {response.data['id']}")
                     break  # 成功したらループを抜ける
-                    except tweepy.TweepyException as e:
-                    print(f"❌ X への投稿に失敗しました: {e}")
-
+                except tweepy.TweepError as e:
+                    print(f"❌ X への投稿に失敗しました（試行 {attempt+1}/3 回目）: {e}")
                     if attempt < 2:  # 最後の試行でなければ待機
                         print("🔄 5秒待機して再試行...")
                         time.sleep(5)
@@ -141,7 +138,6 @@ except tweepy.TweepyException as e:
                         print("⚠️ 投稿に3回失敗したためスキップ")
         else:
             print("⚠️ 要約に失敗したため投稿をスキップ")
-
 
 
 if __name__ == "__main__":
