@@ -16,7 +16,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 
 def summarize_news(news_text):
     """ニュース記事の要約を生成"""
-    model = genai.GenerativeModel(model_name='gemini-pro', api_version='v1')  # 修正: v1 を明示
+    model = genai.GenerativeModel('gemini-pro')  # 修正: `api_version` を削除
     response = model.generate_content(f"以下のニュースを簡潔に要約してください:\n\n{news_text}")
     return response.text.strip()
 
