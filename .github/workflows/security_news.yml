@@ -19,8 +19,8 @@ jobs:
       - name: Install dependencies
         run: pip install requests google-generativeai tweepy
 
-      - name: Run script (with test mode)
-        run: python security_news_bot.py --test  # ✅ `--test` を追加
+      - name: Run script
+        run: python security_news_bot.py  # ✅ `--test` を削除
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           GOOGLE_SEARCH_API_KEY: ${{ secrets.GOOGLE_SEARCH_API_KEY }}
