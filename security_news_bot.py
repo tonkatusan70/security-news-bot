@@ -3,6 +3,7 @@ import requests
 import google.generativeai as genai
 import tweepy
 import time
+import argparse
 from datetime import datetime
 
 # ✅ 環境変数から API キーを取得
@@ -91,9 +92,9 @@ def should_post_now():
     return now in POST_TIMES
 
 
-def post_to_x():
+def post_to_x(force_post=False):
     """最新のニュースを取得し、要約して X に投稿する"""
-    if not should_post_now():
+    if not force_post and not should_post_now():
         print("⏳ 現在は投稿時間ではありません。")
         return
 
@@ -101,6 +102,10 @@ def post_to_x():
     if not news_items:
         print("⚠️ 最新のニュースが見つかりませんでした。")
         return
+
+    # ✅ 強制投稿時は1件のみ投稿
+    if force_post:
+        news_items = news_items[:1]
 
     for news in news_items:
         title_en = news["title"]
@@ -136,4 +141,8 @@ def post_to_x():
 
 
 if __name__ == "__main__":
-    post_to_x()
+    parser = argparse.ArgumentParser(description="ニュースを X に投稿")
+    parser.add_argument("--test", action="store_true", help="テスト投稿（1回のみ投稿）")
+    args = parser.parse_args()
+
+    post_to_x(force_post=args.test)
