@@ -1,0 +1,24 @@
+name: Test Environment Variables
+
+on:
+  workflow_dispatch:  # 手動で実行できるようにする
+
+jobs:
+  test-env:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v3
+
+      - name: Pythonをセットアップ
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'  # 互換性のあるPythonバージョンを指定
+
+      - name: 環境変数を出力
+        run: python test_env.py
+        env:
+          GOOGLE_SEARCH_API_KEY: ${{ secrets.GOOGLE_SEARCH_API_KEY }}
+          GOOGLE_SEARCH_CX: ${{ secrets.GOOGLE_SEARCH_CX }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
