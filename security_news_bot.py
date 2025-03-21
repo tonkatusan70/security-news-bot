@@ -86,11 +86,19 @@ def summarize_news(news_text):
         return None
 
 
-
+def should_post_now():
+    """現在時刻が指定された投稿時間に一致するかを確認"""
+    now = datetime.now().strftime("%H:%M")
+    return now in POST_TIMES
 
 
 def post_to_x(force_post=False):
     """最新のニュースを取得し、要約して X に投稿する"""
+    if not force_post and not should_post_now():
+        print("⏳ 現在は投稿時間ではありません。")
+        return
+
+    news_items = search_google()
     if not news_items:
         print("⚠️ 最新のニュースが見つかりませんでした。")
         return
