@@ -1,10 +1,15 @@
 import requests
 import google.generativeai as genai
-import xml.etree.ElementTree as ET
+import tweepy
 import os
+import xml.etree.ElementTree as ET
 
 # --- 環境変数からAPIキーを取得 ---
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+X_API_KEY = os.getenv("X_API_KEY")
+X_API_SECRET = os.getenv("X_API_SECRET")
+X_ACCESS_TOKEN = os.getenv("X_ACCESS_TOKEN")
+X_ACCESS_TOKEN_SECRET = os.getenv("X_ACCESS_TOKEN_SECRET")
 
 # --- Google Gemini API セットアップ ---
 genai.configure(api_key=GEMINI_API_KEY)
@@ -12,7 +17,7 @@ genai.configure(api_key=GEMINI_API_KEY)
 def summarize_news(news_text):
     """ニュース記事の要約を生成"""
     try:
-        model = genai.GenerativeModel('gemini-pro')  # 修正: 最新バージョンならこれでOK
+        model = genai.GenerativeModel('gemini-pro')  # 最新バージョンならこれでOK
         response = model.generate_content(f"以下のニュースを簡潔に要約してください:\n\n{news_text}")
         return response.text.strip()
     except Exception as e:
@@ -41,9 +46,29 @@ def get_security_news():
     except Exception as e:
         return f"ニュース取得中にエラーが発生しました: {e}"
 
-# --- 実行処理 ---
-if __name__ == "__main__":
+# --- X に投稿 ---
+def post_to_x():
+    """ニュースを要約してXに投稿"""
     news_text = get_security_news()
+    if "エラー" in news_text:
+        print("ニュース取得に失敗しました。投稿をスキップします。")
+        return
+    
     summary = summarize_news(news_text)
-    print("取得したニュース:\n", news_text)
-    print("\n要約:\n", summary)
+    
+    tweet = f"【最新のセキュリティニュース】\n{summary}"
+    if len(tweet) > 280:
+        tweet = tweet[:277] + "..."
+    
+    try:
+        auth = tweepy.OAuthHandler(X_API_KEY, X_API_SECRET)
+        auth.set_access_token(X_ACCESS_TOKEN, X_ACCESS_TOKEN_SECRET)
+        api = tweepy.API(auth)
+        api.update_status(tweet)
+        print("投稿完了:", tweet)
+    except Exception as e:
+        print("Xへの投稿中にエラーが発生しました:", e)
+
+# --- メイン処理 ---
+if __name__ == "__main__":
+    post_to_x()
